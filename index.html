@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta name="description" content="Automated IT Ticketing System by Satkomindo — Track, manage and resolve IT support tickets with real-time SLA monitoring and KPI dashboard.">
+  <title>Satkomindo — IT Service Desk</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Auth Guard -->
+<script>
+  (function() {
+    const auth = localStorage.getItem('tickethub_auth');
+    if (!auth) {
+      window.location.href = 'landing.html';
+    }
+  })();
+</script>
+
+<div class="app-container">
+  <!-- ====== SIDEBAR ====== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo" onclick="navigateTo('dashboard'); return false;">
+        <img src="assets/logo.png" alt="Satkomindo" style="height: 36px;">
+      </a>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">Main Menu</div>
+        <a class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+          <span class="nav-item-icon">📊</span>
+          Dashboard
+        </a>
+        <a class="nav-item" data-page="create-ticket" onclick="navigateTo('create-ticket')">
+          <span class="nav-item-icon">➕</span>
+          Create Ticket
+        </a>
+        <a class="nav-item" data-page="ticket-list" onclick="navigateTo('ticket-list')">
+          <span class="nav-item-icon">📋</span>
+          All Tickets
+          <span class="nav-item-badge" id="open-ticket-count">0</span>
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Analytics</div>
+        <a class="nav-item" data-page="reports" onclick="navigateTo('reports')">
+          <span class="nav-item-icon">📈</span>
+          Reports & SLA
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Tools</div>
+        <a class="nav-item" data-page="data-management" onclick="navigateTo('data-management')">
+          <span class="nav-item-icon">💾</span>
+          Data Management
+        </a>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">Account</div>
+        <a class="nav-item" onclick="handleLogout()" style="cursor:pointer;">
+          <span class="nav-item-icon">🚪</span>
+          Logout
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-user-avatar" id="user-avatar">IT</div>
+        <div class="sidebar-user-info">
+          <h4 id="user-display-name">IT Admin</h4>
+          <span id="user-display-role">Administrator</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ====== MAIN CONTENT ====== -->
+  <main class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+        <div class="header-title">
+          <h2 id="page-title">Dashboard</h2>
+          <p id="page-subtitle">Overview performa IT service desk</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="header-search">
+          <span class="header-search-icon">🔍</span>
+          <input type="text" placeholder="Cari tiket..." id="global-search" onkeyup="handleGlobalSearch(event)">
+        </div>
+        <div style="position:relative">
+          <button class="header-btn" id="notification-btn" onclick="toggleNotifications()">
+            🔔
+            <span class="notification-badge has-count" id="notif-badge" style="display:none">0</span>
+          </button>
+          <!-- Notification Dropdown -->
+          <div class="notification-dropdown" id="notification-dropdown">
+            <div class="notification-dropdown-header">
+              <h3>Notifikasi</h3>
+              <button onclick="clearAllNotifications()">Tandai semua dibaca</button>
+            </div>
+            <div class="notification-list" id="notification-list">
+              <div class="notification-empty">Belum ada notifikasi</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <!-- ====== DASHBOARD PAGE ====== -->
+      <div class="page active" id="page-dashboard">
+        <!-- KPI Cards -->
+        <div class="kpi-grid" id="kpi-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Distribusi Status</div>
+                <div class="card-subtitle">Status tiket saat ini</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-status"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Tiket per Prioritas</div>
+                <div class="card-subtitle">Breakdown berdasarkan prioritas</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-priority"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">SLA Compliance</div>
+                <div class="card-subtitle">Persentase compliance per prioritas</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-sla"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Tiket per Kategori</div>
+                <div class="card-subtitle">Kategori masalah terbanyak</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-category"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Tickets -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Tiket Terbaru</div>
+              <div class="card-subtitle">5 tiket terakhir</div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="navigateTo('ticket-list')">Lihat Semua →</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Ticket ID</th>
+                  <th>Judul</th>
+                  <th>Prioritas</th>
+                  <th>Status</th>
+                  <th>SLA</th>
+                  <th>Dibuat</th>
+                </tr>
+              </thead>
+              <tbody id="recent-tickets-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== CREATE TICKET PAGE ====== -->
+      <div class="page" id="page-create-ticket">
+        <div class="card" style="max-width: 800px;">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📝 Buat Tiket Baru</div>
+              <div class="card-subtitle">Isi form di bawah untuk membuat permintaan dukungan IT baru</div>
+            </div>
+          </div>
+          <form id="create-ticket-form" onsubmit="handleCreateTicket(event)">
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label">Judul Tiket <span class="required">*</span></label>
+                <input type="text" class="form-input" id="ticket-title" placeholder="Contoh: Laptop tidak bisa connect WiFi" required>
+              </div>
+              <div class="form-group full-width">
+                <label class="form-label">Deskripsi <span class="required">*</span></label>
+                <textarea class="form-textarea" id="ticket-description" placeholder="Jelaskan masalah secara detail..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Kategori <span class="required">*</span></label>
+                <select class="form-select" id="ticket-category" required>
+                  <option value="">Pilih Kategori</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Software">Software</option>
+                  <option value="Network">Network</option>
+                  <option value="Access">Access / Permission</option>
+                  <option value="Email">Email</option>
+                  <option value="Other">Lainnya</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Prioritas <span class="required">*</span></label>
+                <select class="form-select" id="ticket-priority" required>
+                  <option value="">Pilih Prioritas</option>
+                  <option value="Critical">🔴 Critical (SLA: 4 jam)</option>
+                  <option value="High">🟠 High (SLA: 8 jam)</option>
+                  <option value="Medium">🟡 Medium (SLA: 24 jam)</option>
+                  <option value="Low">🟢 Low (SLA: 48 jam)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nama Pelapor <span class="required">*</span></label>
+                <input type="text" class="form-input" id="ticket-requester" placeholder="Nama lengkap" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Department <span class="required">*</span></label>
+                <select class="form-select" id="ticket-department" required>
+                  <option value="">Pilih Department</option>
+                  <option value="IT">IT</option>
+                  <option value="HR">HR</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Operations">Operations</option>
+                  <option value="Sales">Sales</option>
+                  <option value="Management">Management</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Assignee</label>
+                <input type="text" class="form-input" id="ticket-assignee" placeholder="Tech support yang ditugaskan" value="IT Support">
+              </div>
+            </div>
+            <div style="margin-top: 24px; display: flex; gap: 12px;">
+              <button type="submit" class="btn btn-primary btn-lg">✨ Buat Tiket</button>
+              <button type="reset" class="btn btn-ghost btn-lg">Reset Form</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ====== TICKET LIST PAGE ====== -->
+      <div class="page" id="page-ticket-list">
+        <div class="filters-bar">
+          <select class="filter-select" id="filter-status" onchange="renderTicketList()">
+            <option value="">Semua Status</option>
+            <option value="Open">Open</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Pending">Pending</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+          </select>
+          <select class="filter-select" id="filter-priority" onchange="renderTicketList()">
+            <option value="">Semua Prioritas</option>
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select class="filter-select" id="filter-category" onchange="renderTicketList()">
+            <option value="">Semua Kategori</option>
+            <option value="Hardware">Hardware</option>
+            <option value="Software">Software</option>
+            <option value="Network">Network</option>
+            <option value="Access">Access</option>
+            <option value="Email">Email</option>
+            <option value="Other">Other</option>
+          </select>
+          <input type="text" class="filter-search" id="filter-search" placeholder="🔍 Cari tiket..." oninput="renderTicketList()">
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Daftar Tiket</div>
+              <div class="card-subtitle" id="ticket-count-label">Menampilkan 0 tiket</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="navigateTo('create-ticket')">➕ Buat Tiket</button>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Ticket ID</th>
+                  <th>Judul</th>
+                  <th>Kategori</th>
+                  <th>Prioritas</th>
+                  <th>Status</th>
+                  <th>SLA</th>
+                  <th>Pelapor</th>
+                  <th>Dibuat</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="ticket-list-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="pagination">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== REPORTS PAGE ====== -->
+      <div class="page" id="page-reports">
+        <div class="kpi-grid" id="report-kpi-grid">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="charts-grid">
+          <div class="chart-card full-width">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📈 Trend Tiket Harian</div>
+                <div class="card-subtitle">Jumlah tiket masuk per hari (30 hari terakhir)</div>
+              </div>
+            </div>
+            <div class="chart-container" style="height: 320px;">
+              <canvas id="chart-trend"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">⏱️ Rata-rata TTR per Kategori</div>
+                <div class="card-subtitle">Time to Resolution dalam jam</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-ttr-category"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🏢 Tiket per Department</div>
+                <div class="card-subtitle">Distribusi tiket berdasarkan departemen</div>
+              </div>
+            </div>
+            <div class="chart-container">
+              <canvas id="chart-department"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLA Detail Table -->
+        <div class="card mt-20">
+          <div class="card-header">
+            <div>
+              <div class="card-title">📊 SLA Compliance Detail</div>
+              <div class="card-subtitle">Ringkasan kepatuhan SLA per prioritas</div>
+            </div>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Prioritas</th>
+                  <th>Target SLA</th>
+                  <th>Total Tiket</th>
+                  <th>Sesuai SLA</th>
+                  <th>Breach SLA</th>
+                  <th>Compliance Rate</th>
+                  <th>Avg TTR</th>
+                </tr>
+              </thead>
+              <tbody id="sla-detail-body">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== DATA MANAGEMENT PAGE ====== -->
+      <div class="page" id="page-data-management">
+        <div class="report-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📤 Export Data</div>
+                <div class="card-subtitle">Download data tiket dalam format JSON atau CSV</div>
+              </div>
+            </div>
+            <div class="export-actions" style="flex-direction: column;">
+              <button class="btn btn-primary" onclick="exportJSON()">📥 Export JSON</button>
+              <button class="btn btn-ghost" onclick="exportCSV()">📄 Export CSV</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">📥 Import Data</div>
+                <div class="card-subtitle">Restore data dari file JSON backup</div>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <input type="file" id="import-file" accept=".json" class="form-input" style="padding: 8px;">
+              <button class="btn btn-success" onclick="importJSON()">⬆️ Import JSON</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🗑️ Reset Data</div>
+                <div class="card-subtitle">Hapus semua data tiket (tidak dapat dikembalikan)</div>
+              </div>
+            </div>
+            <button class="btn btn-danger" onclick="resetAllData()">🗑️ Hapus Semua Data</button>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">🧪 Demo Data</div>
+                <div class="card-subtitle">Generate sample data untuk testing</div>
+              </div>
+            </div>
+            <button class="btn btn-ghost" onclick="generateDemoData()">🎲 Generate Demo Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ====== TICKET DETAIL MODAL ====== -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-ticket-title">Detail Tiket</div>
+      <button class="modal-close" onclick="closeTicketModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-ticket-body">
+      <!-- Populated by JS -->
+    </div>
+    <div class="modal-footer" id="modal-ticket-footer">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ====== TOAST CONTAINER ====== -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Scripts -->
+<script src="js/app.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/notifications.js"></script>
+<script>
+  // Load user info into sidebar
+  (function() {
+    try {
+      const auth = JSON.parse(localStorage.getItem('tickethub_auth'));
+      if (auth) {
+        const initials = auth.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('user-avatar').textContent = initials;
+        document.getElementById('user-display-name').textContent = auth.name;
+        document.getElementById('user-display-role').textContent = auth.role;
+      }
+    } catch(e) {}
+  })();
+
+  function handleLogout() {
+    localStorage.removeItem('tickethub_auth');
+    localStorage.removeItem('tickethub_notifications');
+    window.location.replace('landing.html');
+  }
+</script>
+
+</body>
+</html>

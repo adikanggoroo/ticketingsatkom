@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login atau Register ke Satkomindo — Modern IT Service Desk Platform.">
+  <title>Satkomindo — Login</title>
+  <link rel="stylesheet" href="css/auth.css">
+</head>
+<body>
+
+<!-- Background -->
+<div class="auth-bg"></div>
+<div class="auth-grid"></div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<div class="auth-container">
+  <!-- Logo -->
+  <a href="landing.html" class="auth-logo">
+    <img src="assets/logo.png" alt="Satkomindo" style="height: 40px;">
+  </a>
+
+  <!-- Auth Card -->
+  <div class="auth-card">
+    <!-- Tabs -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login" onclick="switchTab('login')">Login</button>
+      <button class="auth-tab" data-tab="register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- ====== LOGIN PANEL ====== -->
+    <div class="auth-panel active" id="panel-login">
+      <h2 class="auth-panel-title">Selamat datang kembali</h2>
+      <p class="auth-panel-subtitle">Masuk ke akun Satkomindo Anda</p>
+
+      <div class="auth-error" id="login-error">
+        <span>❌</span>
+        <span id="login-error-text">Email atau password salah</span>
+      </div>
+
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="auth-form-group">
+          <label class="auth-form-label">Email <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <input type="email" class="auth-input" id="login-email" placeholder="nama@perusahaan.com" required autocomplete="email">
+            <span class="auth-input-icon">📧</span>
+          </div>
+        </div>
+
+        <div class="auth-form-group">
+          <label class="auth-form-label">Password <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <input type="password" class="auth-input" id="login-password" placeholder="Masukkan password" required autocomplete="current-password">
+            <span class="auth-input-icon">🔒</span>
+            <button type="button" class="auth-password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
+          </div>
+        </div>
+
+        <label class="auth-checkbox">
+          <input type="checkbox" id="remember-me">
+          <span>Ingat saya</span>
+        </label>
+
+        <button type="submit" class="auth-submit" id="login-submit">
+          <span>Masuk</span>
+          <span>→</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Belum punya akun? <a href="#" onclick="switchTab('register'); return false;">Daftar sekarang</a>
+      </div>
+    </div>
+
+    <!-- ====== REGISTER PANEL ====== -->
+    <div class="auth-panel" id="panel-register">
+      <h2 class="auth-panel-title">Buat akun baru</h2>
+      <p class="auth-panel-subtitle">Daftar untuk mulai menggunakan Satkomindo</p>
+
+      <div class="auth-error" id="register-error">
+        <span>❌</span>
+        <span id="register-error-text">Terjadi kesalahan</span>
+      </div>
+
+      <div class="auth-success" id="register-success">
+        <span>✅</span>
+        <span id="register-success-text">Registrasi berhasil!</span>
+      </div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <div class="auth-form-group">
+          <label class="auth-form-label">Email <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <input type="email" class="auth-input" id="reg-email" placeholder="nama@perusahaan.com" required autocomplete="email">
+            <span class="auth-input-icon">📧</span>
+          </div>
+        </div>
+
+        <div class="auth-form-row">
+          <div class="auth-form-group">
+            <label class="auth-form-label">Nama Pengguna <span class="required">*</span></label>
+            <div class="auth-input-wrapper">
+              <input type="text" class="auth-input" id="reg-name" placeholder="Nama lengkap" required autocomplete="name">
+              <span class="auth-input-icon">👤</span>
+            </div>
+          </div>
+
+          <div class="auth-form-group">
+            <label class="auth-form-label">Personal Number <span class="required">*</span></label>
+            <div class="auth-input-wrapper">
+              <input type="text" class="auth-input" id="reg-personal-number" placeholder="Contoh: EMP-001" required>
+              <span class="auth-input-icon">🏷️</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-form-group">
+          <label class="auth-form-label">Role <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <select class="auth-select" id="reg-role" required>
+              <option value="">Pilih Role</option>
+              <option value="Admin">Admin</option>
+              <option value="IT Support">IT Support</option>
+              <option value="Technician">Technician</option>
+              <option value="Manager">Manager</option>
+              <option value="User">User</option>
+            </select>
+            <span class="auth-input-icon">🛡️</span>
+          </div>
+        </div>
+
+        <div class="auth-form-group">
+          <label class="auth-form-label">Password <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <input type="password" class="auth-input" id="reg-password" placeholder="Minimal 6 karakter" required minlength="6" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+            <span class="auth-input-icon">🔒</span>
+            <button type="button" class="auth-password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
+          </div>
+          <div class="password-strength" id="password-strength">
+            <div class="password-strength-bar" id="str-bar-1"></div>
+            <div class="password-strength-bar" id="str-bar-2"></div>
+            <div class="password-strength-bar" id="str-bar-3"></div>
+            <div class="password-strength-bar" id="str-bar-4"></div>
+          </div>
+          <div class="password-strength-text" id="password-strength-text"></div>
+        </div>
+
+        <div class="auth-form-group">
+          <label class="auth-form-label">Konfirmasi Password <span class="required">*</span></label>
+          <div class="auth-input-wrapper">
+            <input type="password" class="auth-input" id="reg-confirm-password" placeholder="Ulangi password" required minlength="6" autocomplete="new-password">
+            <span class="auth-input-icon">🔒</span>
+          </div>
+        </div>
+
+        <label class="auth-checkbox">
+          <input type="checkbox" id="agree-terms" required>
+          <span>Saya setuju dengan ketentuan penggunaan</span>
+        </label>
+
+        <button type="submit" class="auth-submit" id="register-submit">
+          <span>Daftar Akun</span>
+          <span>✨</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Sudah punya akun? <a href="#" onclick="switchTab('login'); return false;">Login di sini</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-back">
+    <a href="landing.html">← Kembali ke beranda</a>
+  </div>
+</div>
+
+<script src="js/auth.js"></script>
+
+</body>
+</html>

@@ -214,19 +214,19 @@
               <div class="card-subtitle">Isi form di bawah untuk membuat permintaan dukungan IT baru</div>
             </div>
           </div>
-          <form id="create-ticket-form" onsubmit="handleCreateTicket(event)">
+          <form id="create-ticket-form">
             <div class="form-grid">
               <div class="form-group full-width">
                 <label class="form-label">Judul Tiket <span class="required">*</span></label>
-                <input type="text" class="form-input" id="ticket-title" placeholder="Contoh: Laptop tidak bisa connect WiFi" required>
+                <input type="text" name="title" class="form-input" id="ticket-title" placeholder="Contoh: Laptop tidak bisa connect WiFi" required>
               </div>
               <div class="form-group full-width">
                 <label class="form-label">Deskripsi <span class="required">*</span></label>
-                <textarea class="form-textarea" id="ticket-description" placeholder="Jelaskan masalah secara detail..." required></textarea>
+                <textarea name="problemDetails" class="form-textarea" id="ticket-description" placeholder="Jelaskan masalah secara detail..." required></textarea>
               </div>
               <div class="form-group">
                 <label class="form-label">Kategori <span class="required">*</span></label>
-                <select class="form-select" id="ticket-category" required>
+                <select name="category" class="form-select" id="ticket-category" required>
                   <option value="">Pilih Kategori</option>
                   <option value="Hardware">Hardware</option>
                   <option value="Software">Software</option>
@@ -238,7 +238,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Prioritas <span class="required">*</span></label>
-                <select class="form-select" id="ticket-priority" required>
+                <select name="priority" class="form-select" id="ticket-priority" required>
                   <option value="">Pilih Prioritas</option>
                   <option value="Critical">🔴 Critical (SLA: 4 jam)</option>
                   <option value="High">🟠 High (SLA: 8 jam)</option>
@@ -248,11 +248,11 @@
               </div>
               <div class="form-group">
                 <label class="form-label">Nama Pelapor <span class="required">*</span></label>
-                <input type="text" class="form-input" id="ticket-requester" placeholder="Nama lengkap" required>
+                <input type="text" name="user" class="form-input" id="ticket-requester" placeholder="Nama lengkap" required>
               </div>
               <div class="form-group">
                 <label class="form-label">Department <span class="required">*</span></label>
-                <select class="form-select" id="ticket-department" required>
+                <select name="department" class="form-select" id="ticket-department" required>
                   <option value="">Pilih Department</option>
                   <option value="IT">IT</option>
                   <option value="HR">HR</option>

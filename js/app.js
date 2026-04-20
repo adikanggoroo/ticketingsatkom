@@ -987,6 +987,37 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+
+const scriptURL = 'https://script.google.com/macros/s/AKfycbzdvHmjnMeVIW3EWTRnMFaweK-rEe2nEup_IqeDtLxOdc-OGUf8S0v2FmDL_qcuoPQW/exec';
+const form = document.getElementById('create-ticket-form');
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  
+  // Menampilkan indikator loading (Opsional)
+  const submitBtn = form.querySelector('button[type="submit"]');
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = "Mengirim...";
+
+  fetch(scriptURL, { 
+    method: 'POST', 
+    body: new FormData(form)
+  })
+  .then(response => {
+    alert("Tiket Berhasil Masuk ke Database!");
+    form.reset();
+    navigateTo('ticket-list'); // Kembali ke daftar tiket
+  })
+  .catch(error => {
+    console.error('Error!', error.message);
+    alert("Gagal mengirim tiket. Cek koneksi atau Apps Script.");
+  })
+  .finally(() => {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = "✨ Buat Tiket";
+  });
+});
+
   // Periodically update SLA statuses
   setInterval(() => {
     const activePage = document.querySelector('.page.active');
